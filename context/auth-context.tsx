@@ -1,5 +1,6 @@
-import { auth } from "@/firebase.config";
+import { auth, db } from "@/firebase.config";
 import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { createContext, ReactNode, useContext, useEffect } from "react";
 
 export const AuthContext = createContext({
@@ -11,8 +12,13 @@ export const AuthContext = createContext({
 
 const AuthProvider=({children}:{children:ReactNode})=>{
 const register=(name:string,email:string,password:string)=>{
-        createUserWithEmailAndPassword(auth,email,password).then((user)=>{
-            console.log(user)
+        createUserWithEmailAndPassword(auth,email,password).then((crd)=>{
+            setDoc(doc(db,"users",crd.user.uid),{
+                name:name,
+                email:email,
+                id:crd.user.uid
+            }).then(res=>console.log(res))
+            .catch(err=>console.log(err))
         }).catch(err=>console.log(err))
 }
 const login=(email:string,password:string)=>{
