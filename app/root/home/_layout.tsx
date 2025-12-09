@@ -3,7 +3,10 @@ import React from 'react'
 
 const HomLayout = () => {
   return (
-    <Stack />
+    <Stack screenOptions={{headerShown:false}}>
+      <Stack.Screen name='index' />
+      <Stack.Screen name='[slug]' />
+    </Stack>
   )
 }
 

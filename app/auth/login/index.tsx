@@ -1,12 +1,134 @@
-import React from 'react'
-import { Text, View } from 'react-native'
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Checkbox } from 'expo-checkbox';
+import { Link, router } from 'expo-router';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const LoginScreen = () => {
-  return (
-    <View>
-      <Text>LoginScreen</Text>
+const SignIn = () => {
+  const [isChecked, setChecked] = useState(false);
+  const [isSeret,setIsSecret]=useState(true)
+  const [email,setEmail]=useState("")
+
+  const [password,setPassword]=useState("")
+  const [error,setError]=useState({email:"",password:""})
+  const handlerSubmit=()=>{
+    if(email=="") setError((prev)=>{
+      return {...prev,email:"Email is required!"}
+    /// VALIDATE
+  })
+      if(password=="") setError((prev)=>{
+      return {...prev,password:"Email is required!"}
+    /// VALIDATE
+   
+  })
+   if(!email && !password) return;
+router.navigate("/root/home")
+   console.log(email,password)
+}
+  const handleEmailChange=(text: string)=>{
+    setError({email:"",password:""})
+    setEmail(text)
+  }
+  const handlePasswordChange=(text: string)=>{
+    setError({email:"",password:""})
+    setPassword(text)
+  }
+  return (<SafeAreaView style={styles.container}>
+    <View style={{width:"100%"}}>
+    {/* <View style={{width:"100%",display:"flex",justifyContent:"center",flexDirection:"row"}}>
+      <Text style={{fontSize:24,fontWeight:900,marginVertical:20,color:"#3183ff"}}>Smart Eccomerce</Text>
+    </View> */}
+    <View style={{width:"100%",borderRadius:12,backgroundColor:"#fff",padding:16}}>
+      <View style={{width:"100%",display:"flex",justifyContent:"center",flexDirection:"column",marginVertical:16}}>
+        <Text style={{fontSize:16,fontWeight:700,color:"#8a8a8a9a",textAlign:"center"}}>Wellcome to</Text>
+        <Text style={{fontSize:16,fontWeight:700,color:"#8a8a8a9a",textAlign:"center"}}> Smart Chat App Login now</Text>
+      </View>
+      <View style={{gap:16}}>
+    <View style={[{width:"100%",gap:2}]}>
+      <View style={[styles.border,{borderColor:error.email?"#ff6060c4":"#c7c7c7ff",height:48,width:"100%",backgroundColor:error.email?"#ff933b1a":"#f8f7f7ff",display:"flex",flexDirection:"row",alignItems:"center"}]}>
+        <MaterialCommunityIcons name='email' size={24} color={"#c7c7c7ff"} />
+        <TextInput onChangeText={handleEmailChange} style={{flex:1}} placeholder='Email'/>
+      </View>
+      {error.email &&
+       <View style={{display:"flex",marginHorizontal:16}}>
+        <Text style={{color:"#ff61619a",fontSize:12,textAlign:"center"}}>{error.email}</Text>
+      </View>}
     </View>
+    <View style={[{width:"100%",gap:6}]}>
+      <View style={[styles.border,{borderColor:error.password?"#ff6060c4":"#c7c7c7ff",height:48,width:"100%",backgroundColor:error.password?"#ff933b1a":"#f8f7f7ff",display:"flex",flexDirection:"row",alignItems:"center"}]}>
+        <MaterialCommunityIcons name='lock' size={24} color={"#c7c7c7ff"} />
+        <TextInput onChangeText={handlePasswordChange} secureTextEntry={!isSeret} placeholder='Password' style={{flex:1}}/>
+        <MaterialCommunityIcons onPress={()=>setIsSecret(!isSeret)} name={isSeret?'eye':'eye-off'} size={24} color={"#c7c7c7ff"} />
+      </View>{
+        error.password &&
+       <View style={{display:"flex",marginHorizontal:16}}>
+        <Text style={{color:"#ff61619a",fontSize:12,textAlign:"center"}}>{error.password}</Text>
+      </View>
+      }
+    </View>
+    <View style={[{width:"100%",display:"flex",flexDirection:"row",justifyContent:"space-between",alignItems:"center"}]}>
+    <View style={styles.section}>
+      <Checkbox style={styles.checkbox} value={isChecked} onValueChange={setChecked} />
+      <Text style={styles.paragraph}>Remember me</Text>
+    </View>
+    <Text style={styles.paragraph}>Forgot password?</Text>
+    </View>
+    </View>
+    <TouchableOpacity onPress={handlerSubmit} style={[styles.border,{borderColor:"#d8d8d8ff",height:48,width:"100%",backgroundColor:"#3183ff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
+      <Text style={{color:"#fff"}}>Login</Text>
+    </TouchableOpacity>
+      <View style={{width:"100%",marginVertical:12}}>
+        <Link href={"/auth/register"} asChild>
+      <Text style={{textAlign:"center",color:"#8a8a8a9a"}}>I have not any account Register ?</Text>
+      </Link>
+    </View>
+    <View style={{width:"100%",marginBottom:12}}>
+      <Text style={{textAlign:"center",color:"#8a8a8a9a"}}>Or Sign In With</Text>
+    </View>
+      <View style={{width:"100%",display:"flex",flexDirection:"row",justifyContent:"space-evenly"}}>
+          <TouchableOpacity style={[styles.border,{borderColor:"#d8d8d8ff",height:40,width:40,backgroundColor:"#d0e3ffff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
+            <MaterialCommunityIcons name='facebook' size={16} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.border,{borderColor:"#d8d8d8ff",height:40,width:40,backgroundColor:"#d0e3ffff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
+              <MaterialCommunityIcons name='google' size={16} />
+          </TouchableOpacity>
+            <TouchableOpacity style={[styles.border,{borderColor:"#d8d8d8ff",height:40,width:40,backgroundColor:"#d0e3ffff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
+              <MaterialCommunityIcons name='apple' size={16} />
+          </TouchableOpacity>
+        </View>
+   </View>
+   </View>
+</SafeAreaView>
   )
 }
 
-export default LoginScreen
+export default SignIn
+
+const styles = StyleSheet.create({
+  container:{
+    backgroundColor:"#e9ecf4",
+    flex:1,
+    padding:12,
+    display:"flex",
+    alignItems:"center",
+    justifyContent:"center"
+  },
+  border:{
+    borderWidth:1,
+    color:"#eeeeee9a",
+    borderRadius:8,
+    paddingHorizontal:12
+  },
+    section: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  paragraph: {
+    fontSize: 14,
+    color:"#8a8a8a9a"
+  },
+  checkbox: {
+    margin: 8,
+  },
+})
