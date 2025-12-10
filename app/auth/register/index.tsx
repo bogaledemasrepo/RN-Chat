@@ -1,3 +1,4 @@
+import { useAuth } from '@/context/auth-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Checkbox } from 'expo-checkbox';
 import React, { useState } from 'react';
@@ -11,6 +12,7 @@ const [isChecked, setChecked] = useState(false);
   const [name,setName]=useState("")
   const [password,setPassword]=useState("")
   const [error,setError]=useState({email:"",password:"",name:""})
+  const {register,isLoading}=useAuth();
   const handlerSubmit=()=>{
         if(name=="") setError((prev)=>{
       return {...prev,name:"Name is required!"}
@@ -20,14 +22,14 @@ const [isChecked, setChecked] = useState(false);
       return {...prev,email:"Email is required!"}
     /// VALIDATE
   })
-      if(password=="") setError((prev)=>{
-      return {...prev,password:"Email is required!"}
+        if(password.length < 6) setError((prev)=>{
+      return {...prev,password:password==""?"Passowrd is required!":"Passowrd must be longer!"}
     /// VALIDATE
    
   })
    if(!email && !password && !name) return;
 
-   console.log(name,email,password)
+   register(name,email,password)
 }
   const handleEmailChange=(text: string)=>{
     setError({email:"",password:"",name:""})
@@ -89,17 +91,13 @@ const [isChecked, setChecked] = useState(false);
         <View style={[{width:"100%",display:"flex",flexDirection:"row",justifyContent:"space-between",alignItems:"center"}]}>
         <View style={styles.section}>
           <Checkbox style={styles.checkbox} value={isChecked} onValueChange={setChecked} />
-          <Text style={styles.paragraph}>Remember me</Text>
+          <Text style={styles.paragraph}>Accept Terms and Policies.</Text>
         </View>
-        <Text style={styles.paragraph}>Forgot password?</Text>
         </View>
         </View>
     <TouchableOpacity onPress={handlerSubmit} style={[styles.border,{height:48,width:"100%",backgroundColor:"#3183ff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-      <Text style={{color:"#fff"}}>Login</Text>
+      <Text style={{color:"#fff"}}>{isLoading?"Registering...":"Register"}</Text>
     </TouchableOpacity>
-      <View style={{width:"100%",marginVertical:12}}>
-      <Text style={{textAlign:"center",color:"#8a8a8a9a"}}>I have not any account Register ?</Text>
-    </View>
     <View style={{width:"100%",marginBottom:12}}>
       <Text style={{textAlign:"center",color:"#8a8a8a9a"}}>Or Sign In With</Text>
     </View>

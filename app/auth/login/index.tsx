@@ -1,7 +1,8 @@
+import { useAuth } from '@/context/auth-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Checkbox } from 'expo-checkbox';
 import { Link, router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,6 +10,7 @@ const SignIn = () => {
   const [isChecked, setChecked] = useState(false);
   const [isSeret,setIsSecret]=useState(true)
   const [email,setEmail]=useState("")
+  const {login,user,isLoading,handleTost}=useAuth();
 
   const [password,setPassword]=useState("")
   const [error,setError]=useState({email:"",password:""})
@@ -17,14 +19,15 @@ const SignIn = () => {
       return {...prev,email:"Email is required!"}
     /// VALIDATE
   })
-      if(password=="") setError((prev)=>{
-      return {...prev,password:"Email is required!"}
+      if(password.length < 6) setError((prev)=>{
+      return {...prev,password:password==""?"Passowrd is required!":"Passowrd must be longer!"}
     /// VALIDATE
    
   })
    if(!email && !password) return;
-router.navigate("/root/home")
    console.log(email,password)
+   login(email,password)
+   
 }
   const handleEmailChange=(text: string)=>{
     setError({email:"",password:""})
@@ -34,6 +37,9 @@ router.navigate("/root/home")
     setError({email:"",password:""})
     setPassword(text)
   }
+  useEffect(()=>{
+    if(user) router.navigate("/root/home")
+  },[user])
   return (<SafeAreaView style={styles.container}>
     <View style={{width:"100%"}}>
     {/* <View style={{width:"100%",display:"flex",justifyContent:"center",flexDirection:"row"}}>
@@ -76,7 +82,7 @@ router.navigate("/root/home")
     </View>
     </View>
     <TouchableOpacity onPress={handlerSubmit} style={[styles.border,{borderColor:"#d8d8d8ff",height:48,width:"100%",backgroundColor:"#3183ff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-      <Text style={{color:"#fff"}}>Login</Text>
+      <Text style={{color:"#fff"}}>{isLoading?"Logging...":"Login"}</Text>
     </TouchableOpacity>
       <View style={{width:"100%",marginVertical:12}}>
         <Link href={"/auth/register"} asChild>

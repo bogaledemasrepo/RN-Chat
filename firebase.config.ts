@@ -1,21 +1,20 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
+import { initializeAuth } from "firebase/auth";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
 // @ts-ignore: getReactNativePersistence exists in the RN bundle.
-import { getReactNativePersistence, initializeAuth } from "firebase/auth";
+// import { getReactNativePersistence, initializeAuth } from "firebase/auth";
 import {
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    getFirestore,
-    orderBy,
-    query,
-    setDoc,
-    updateDoc,
-    where,
-    writeBatch
+  collection,
+  doc,
+  getDocs,
+  getFirestore,
+  orderBy,
+  query,
+  setDoc,
+  where,
+  writeBatch
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -30,9 +29,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-export const auth = initializeAuth(app,{
-    persistence:getReactNativePersistence(AsyncStorage)
-})
+export const auth = initializeAuth(app)
+// export const auth = initializeAuth(app,{
+//     persistence:getReactNativePersistence(AsyncStorage)
+// })
 export const db = getFirestore(app);
 
 export async function createFriendship(myId:string, friendId:string, myName:string, friendName:string, status = 'accepted') {
@@ -148,16 +148,16 @@ export async function getUsers() {
   const usersCol = collection(db, 'users');
   const userSnapshot = await getDocs(usersCol);
   const userList = userSnapshot.docs.map(doc => doc.data());
-  const docRef = doc(db, "users", "userId");
-  const upDocRef=await updateDoc(docRef,{});
-  const docSnap = await getDoc(docRef);
+  // const docRef = doc(db, "users", "userId");
+  // const upDocRef=await updateDoc(docRef,{});
+  // const docSnap = await getDoc(docRef);
 
   // if (docSnap.exists()) {
   //     console.log("Document data:", docSnap.data());
   // } else {
   //     console.log("No such document!");
   // }
-  console.log(userList,docSnap,upDocRef)
+  // console.log(userList,docSnap,upDocRef)
   // addDoc(usersCol,{
   //   uid:"jkdffioehfiehfseuisuefskjiissifhsi",
   //   email:"bbbbbbbbbbbbbbbbbbbbbbbbbbb@gmail.com",
