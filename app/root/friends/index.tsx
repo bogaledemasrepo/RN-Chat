@@ -9,10 +9,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const Explore = () => {
   const {user}=useAuth();
   const [users,setUsers]=useState<{
-    id: string;
-    name: string;
-    email: string;
-}[]>([]);
+        id: string;
+        name: string;
+        email: string;
+    }[]>([]);
   async function exploreUsers() {
       const usersCol = collection(db, 'users');
       const userSnapshot = await getDocs(usersCol);
@@ -37,8 +37,8 @@ const Explore = () => {
    
         <FlatList data={users} contentContainerStyle={{padding:"1%",gap:4}} renderItem={({item})=>(
           <Link  href={{
-            pathname: "/root/home/[slug]",
-            params: { slug: item.id }
+            pathname: "/detail/[slug]",
+            params: { slug: [user?.id.trim(), item.id].sort().join('_') }
           }}>
           <View style={{width:"100%",borderRadius:4,display:"flex",borderWidth:1,borderColor:"#d3d3d3ff",padding:4,flexDirection:"row",justifyContent:"space-between"}}>
            <View style={{display:"flex",flexDirection:"row"}}>

@@ -6,8 +6,7 @@ import { collection, doc, getDoc, onSnapshot, orderBy, query, setDoc, writeBatch
 
 
 import React, { useEffect, useRef, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { FlatList, KeyboardAvoidingView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 async function sendMessage(chatId:string, senderId:string, text:string) {
   const batch = writeBatch(db); // Use a batch for atomicity
@@ -31,7 +30,6 @@ async function sendMessage(chatId:string, senderId:string, text:string) {
 
   try {
     await batch.commit();
-    console.log("Message sent and chat updated successfully.");
   } catch (error) {
     console.error("Error sending message:", error);
     throw error;
@@ -46,10 +44,9 @@ function getChatMessagesQuery(chatId:string) {
   // Use this query with onSnapshot() to listen for new messages in real-time.
 }
 
-async function createOneOnOneChat(userId1:string, userId2:string) {
+async function createOneOnOneChat(chatName:string,chatId:string) {
   // Create a unique, sorted Chat ID
-  const memberIds = [userId1, userId2].sort();
-  const chatId = memberIds.join('_'); 
+  const memberIds = chatId.split('_').sort();
 
   const chatRef = doc(db, "chats", chatId);
 
@@ -57,9 +54,9 @@ async function createOneOnOneChat(userId1:string, userId2:string) {
     await setDoc(chatRef, {
       memberIds: memberIds,
       isGroupChat: false,
-      lastMessageText: "Chat created.",
+      lastMessageText: "Start chat",
       lastMessageTimestamp: new Date(),
-      title: `${userId1} & ${userId2} Chat`, // You would use names in a real app
+      title: chatName, // You would use names in a real app
     }, { merge: true }); // Use merge to prevent overwriting if it exists
     
     return true;
@@ -73,11 +70,19 @@ const Detail = () => {
   const [messages,setMessages]=useState<{senderId:string,text:string,id:string}[]>([])
   const [message,setMessage]=useState("")
   const [isYourFriend,setIsYourFriend]=useState(false);
-  const {user}=useAuth();
+  const {user,handleTost}=useAuth();
   const {slug}= useLocalSearchParams();
+  const [newChatName,setNewChatName]=useState("")
    // Create a unique, sorted Chat ID
-  const memberIds = [user?.id, slug].sort();
-  const chatId = memberIds.join('_'); 
+  const chatId =slug as string; 
+
+  const flatListRef = useRef<FlatList>(null); 
+
+ const scrollToEnd = () => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  };
 
    useEffect(()=>{
     const q = query(
@@ -92,8 +97,8 @@ const Detail = () => {
           const {senderId,text}=doc.data()
           messagesUpdated=[...messagesUpdated,{senderId,text,id:doc.id}]
         });
-        console.log(messagesUpdated)
         setMessages(messagesUpdated)
+         scrollToEnd()
           // You can also inspect document changes (ADDED, MODIFIED, REMOVED)
           return unsub;
       },);
@@ -113,7 +118,8 @@ const Detail = () => {
     }).catch(err=>console.log(err))
  },[])
  const startChat=()=>{
-   if(user?.id && slug) createOneOnOneChat(user?.id,slug as string).then(res=>{
+  if(!newChatName) handleTost("Chat name is required","error",3000)
+   if(user?.id && slug) createOneOnOneChat(newChatName,slug as string).then(res=>{
     if(res == true) return setIsYourFriend(true)
       return;
    })
@@ -127,26 +133,20 @@ const Detail = () => {
   return console.log("something went wrong")
 
  }
-  const scrollViewRef = useRef<ScrollView>(null); 
 
-  // This function is called every time the content size changes.
-  const handleContentSizeChange = () => {
-    // scrollToEnd() scrolls to the bottom for vertical, or right for horizontal.
-    scrollViewRef.current?.scrollToEnd({ animated: false }); 
-  };
   return (<>
-  <SafeAreaView>
             <View style={{height:"100%",backgroundColor:"333",display:"flex",flexDirection:"column",justifyContent:"flex-end",padding:8}}>
              {isYourFriend && 
               <KeyboardAvoidingView behavior='padding'>
                 <FlatList
                   data={messages}
+                  ref={flatListRef} // Attach the ref
                   renderItem={({item})=> <View  style={{borderWidth:1,marginVertical:4, borderColor:"#ddddddff",borderRadius:8,padding:12}}>
                     <Text>{item.text}</Text>
                     </View>}
                   keyExtractor={item => item.id}
                   // inverted={true} // Inverts the scroll direction and display order
-                  style={{bottom:0}}
+                  style={{bottom:4}}
                   bounces
                   scrollEnabled
                   scrollsToTop
@@ -163,15 +163,16 @@ const Detail = () => {
                 </View>
               </KeyboardAvoidingView>
               }
-              {!isYourFriend && 
+              {!isYourFriend && <View>
+                <TextInput value={newChatName} onChangeText={setNewChatName} multiline style={{borderWidth:2,borderColor:"#bdbdbdff",borderRadius:8,padding:12}} />
                 <TouchableOpacity onPress={startChat} style={[styles.border,{borderColor:"#d8d8d8ff",height:48,width:"100%",backgroundColor:"#3183ff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
                   <Text style={{color:"#fff"}}>Start Chat</Text>
                 </TouchableOpacity>
+                </View>
               }
               <View style={{height:32}}></View>
             </View>
             
-          </SafeAreaView>
           <StatusBar animated barStyle={"default"} />
           </>)
 }

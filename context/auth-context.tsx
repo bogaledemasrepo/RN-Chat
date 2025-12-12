@@ -8,7 +8,7 @@ import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
 // Define the type for the full context object
 interface AuthContextType {
     isLoading:boolean,
-    user: {name:string,email:string,id:string} | null;
+    user: {name:string,email:string,id:string,avator:string} | null;
     register: (name: string, email: string, password: string) => void;
     login: (email: string, password: string) => void; // Corrected login signature
     logout: () => void;
@@ -27,7 +27,7 @@ export const AuthContext = createContext<AuthContextType>({
 
 const AuthProvider=({children}:{children:ReactNode})=>{
 const [isLoading,setIsLoading]=useState(false);
-const [user,setUser]=useState<{id:string,email:string,name:string} | null>(null);
+const [user,setUser]=useState<{id:string,email:string,name:string,avator:""} | null>(null);
 const top = useSharedValue(-100);
 const [tostTitle,setTostTitle]=useState("")
 const [tostType,setTostType]=useState("")
@@ -46,7 +46,8 @@ const register=async (name:string,email:string,password:string)=>{
         setDoc(doc(db,"users",crd.user.uid),{
             name:name,
             email:email,
-            id:crd.user.uid
+            id:crd.user.uid,
+            avator:""
         }).then(res=>console.log(res))
         .catch(err=>console.log(err))
     }).catch(err=>{
@@ -70,7 +71,6 @@ const login = async (email: string, password: string) => {
 
         if (!querySnapshot.empty) {
             const data = querySnapshot.docs[0].data();
-            console.log(data)
             // setUser({id,email,name})
         } else {
             console.log("No user document found in Firestore.");
@@ -96,13 +96,13 @@ useEffect(()=>{
       const q = query(collection(db,"users"), where("id", "==", user.uid), limit(1)); 
        getDocs(q).then(snapshot=>{
         if(!snapshot.empty) {
-         const {id,name,email} = snapshot.docs[0].data()
-         setUser({id,name,email})
+         const {id,name,email,avator} = snapshot.docs[0].data()
+         setUser({id,name,email,avator})
         }
        });
     }
    })
-   setUser({"email": "jk@gmail.com", "id": "9J6CXRw5ylhGdeOnIypctjrdqt13", "name": "Jacob"});
+   setUser({"email": "jk@gmail.com", "id": "9J6CXRw5ylhGdeOnIypctjrdqt13", "name": "Jacob","avator":""});
 return unsub;
 },[])
 

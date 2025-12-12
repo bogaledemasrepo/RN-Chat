@@ -1,7 +1,8 @@
+import PhotoUpload from '@/components/file-upload'
 import { useAuth } from '@/context/auth-context'
-import { AntDesign, Feather, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'
+import { Feather, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'
 import React from 'react'
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Profile = () => {
@@ -9,10 +10,7 @@ const Profile = () => {
   return (<SafeAreaView style={{flex:1}}>
           <ScrollView style={{padding:16}}>
             <View style={{margin:"auto"}}>
-              <View style={{borderRadius:100,position:"relative"}}>
-                <Image style={{borderRadius:100,margin:"auto",backgroundColor:"#fff",padding:8,marginVertical:8}} resizeMode='cover' width={100} height={100} source={require('../../../assets/images/icon.png')} />
-                <AntDesign style={{position:"absolute",bottom:0,right:"20%"}}  name="cloud-upload" size={36} color="#008cffff" />
-              </View>
+              <PhotoUpload onUpload={()=>{}} initialImage={user?.avator} />
               <View style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
                 <Text style={{fontSize:18,fontWeight:"bold"}}>{(user?.name)?user.name:'Unknoun User'}</Text>
                 <View style={{display:"flex",gap:4,flexDirection:"row",alignItems:"center"}}>

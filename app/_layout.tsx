@@ -8,6 +8,7 @@ const _layout = () => {
       <Stack.Screen name='index' />
       <Stack.Screen name='root' />
       <Stack.Screen name='auth' />
+      <Stack.Screen name='detail/[slug]' />
     </Stack>
     </AuthProvider>
   )
