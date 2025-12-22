@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "RN-Chat",
-    "slug": "RN-Chat",
+    "slug": "rn-chat",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -21,7 +21,10 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.RNChat"
+      "package": "com.anonymous.RNChat",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -34,12 +37,12 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
             "backgroundColor": "#000000"
-          }
+          },
+          "enableFullScreenImage_legacy": true
         }
       ],
       "expo-font",
@@ -48,6 +51,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "cd64a6f2-b42c-453d-bc5c-7a942d4db6be"
+      }
+    },
+    "owner": "bogye"
   }
 }
