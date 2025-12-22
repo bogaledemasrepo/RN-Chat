@@ -1,5 +1,7 @@
+import { API_URL } from '@/constants';
 import { useAuth } from '@/context/auth-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'expo-checkbox';
 import { Link, router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -10,11 +12,11 @@ const SignIn = () => {
   const [isChecked, setChecked] = useState(false);
   const [isSeret,setIsSecret]=useState(true)
   const [email,setEmail]=useState("")
-  const {login,user,isLoading,handleTost}=useAuth();
+  const {user,handleTost,handleSetUser}=useAuth();
 
   const [password,setPassword]=useState("")
   const [error,setError]=useState({email:"",password:""})
-  const handlerSubmit=()=>{
+  const handlerSubmit=async ()=>{
     if(email=="") setError((prev)=>{
       return {...prev,email:"Email is required!"}
     /// VALIDATE
@@ -25,7 +27,21 @@ const SignIn = () => {
    
   })
    if(!email && !password) return;
-   login(email,password)
+  fetch(`${API_URL}/auth/login`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify({email,password})
+  }).then(res=>{
+    if(!res.ok) handleTost("Something went wrrong!","error",3000)
+      return res.json();
+  }).then(data=>{
+    console.log(data.token)
+    AsyncStorage.setItem("authToken",data.token||"")
+    handleSetUser({...data.user,token:data.token})
+  })
+ 
    
 }
   const handleEmailChange=(text: string)=>{
@@ -81,7 +97,7 @@ const SignIn = () => {
     </View>
     </View>
     <TouchableOpacity onPress={handlerSubmit} style={[styles.border,{borderColor:"#d8d8d8ff",height:48,width:"100%",backgroundColor:"#3183ff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-      <Text style={{color:"#fff"}}>{isLoading?"Logging...":"Login"}</Text>
+      <Text style={{color:"#fff"}}>{"Login"}</Text>
     </TouchableOpacity>
       <View style={{width:"100%",marginVertical:12}}>
         <Link href={"/auth/register"} asChild>

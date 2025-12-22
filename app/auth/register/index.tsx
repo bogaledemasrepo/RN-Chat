@@ -1,5 +1,7 @@
+import { API_URL } from '@/constants';
 import { useAuth } from '@/context/auth-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'expo-checkbox';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -12,7 +14,7 @@ const [isChecked, setChecked] = useState(false);
   const [name,setName]=useState("")
   const [password,setPassword]=useState("")
   const [error,setError]=useState({email:"",password:"",name:""})
-  const {register,isLoading}=useAuth();
+  const {handleSetUser,handleTost}=useAuth();
   const handlerSubmit=()=>{
         if(name=="") setError((prev)=>{
       return {...prev,name:"Name is required!"}
@@ -29,7 +31,21 @@ const [isChecked, setChecked] = useState(false);
   })
    if(!email && !password && !name) return;
 
-   register(name,email,password)
+    fetch(`${API_URL}/auth/register`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+      },
+      body:JSON.stringify({name,email,password})
+     }).then(res=>{
+    if(!res.ok) handleTost("Something went wrrong!","error",3000)
+      return res.json();
+  }).then(data=>{
+    console.log(data.token)
+    AsyncStorage.setItem("authToken",data.token||"")
+    handleSetUser({...data.user,token:data.token})
+  })
+ 
 }
   const handleEmailChange=(text: string)=>{
     setError({email:"",password:"",name:""})
@@ -96,7 +112,7 @@ const [isChecked, setChecked] = useState(false);
         </View>
         </View>
     <TouchableOpacity onPress={handlerSubmit} style={[styles.border,{height:48,width:"100%",backgroundColor:"#3183ff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-      <Text style={{color:"#fff"}}>{isLoading?"Registering...":"Register"}</Text>
+      <Text style={{color:"#fff"}}>{"Register"}</Text>
     </TouchableOpacity>
     <View style={{width:"100%",marginBottom:12}}>
       <Text style={{textAlign:"center",color:"#8a8a8a9a"}}>Or Sign In With</Text>
