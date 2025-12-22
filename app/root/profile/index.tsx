@@ -1,16 +1,20 @@
-import PhotoUpload from '@/components/file-upload'
+import ImageViewer from '@/components/ImageViewer'
 import { useAuth } from '@/context/auth-context'
-import { Feather, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons'
+
 import React from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Profile = () => {
-  const {user,logout}=useAuth();
+  const {user,handleSetUser}=useAuth();
+  console.log(user)
+
   return (<SafeAreaView style={{flex:1}}>
           <ScrollView style={{padding:16}}>
-            <View style={{margin:"auto"}}>
-              <PhotoUpload onUpload={()=>{}} initialImage={user?.avator} />
+              <View style={{marginHorizontal:"auto",marginTop:24}}>
+              <ImageViewer imgSource={user?.avator}/>
+              </View>
               <View style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
                 <Text style={{fontSize:18,fontWeight:"bold"}}>{(user?.name)?user.name:'Unknoun User'}</Text>
                 <View style={{display:"flex",gap:4,flexDirection:"row",alignItems:"center"}}>
@@ -18,8 +22,7 @@ const Profile = () => {
                   <Text style={{fontSize:16,color:"#858585ff"}}>{user?.email??'bgdm@gmail.com'}</Text>
                 </View>
               </View>
-            </View>
-            <View style={{marginTop:16}}>
+            {/* <View style={{marginTop:16}}>
               <View>
                 <Text style={{fontSize:16,color:"#858585ff"}}>Personal Information</Text>
               </View>
@@ -68,10 +71,17 @@ const Profile = () => {
                 onPress={logout}>
                   <MaterialCommunityIcons name="logout" size={24} color="#d45252ff" />
                 <Text style={(styles.text, styles.buttonText)}>Logout</Text>
-            </Pressable>
-            </View>
+              </Pressable>
+            </View> */}
+            <Pressable
+                style={[styles.button]}
+                onPress={()=>handleSetUser(null)}>
+                  <MaterialCommunityIcons name="logout" size={24} color="#d45252ff" />
+                <Text style={(styles.text, styles.buttonText)}>Logout</Text>
+              </Pressable>
             <View style={{width:"100%",height:1,backgroundColor:"#cacacaff",marginVertical:36}}></View>
         </ScrollView>
+      
     </SafeAreaView>
   )
 }
