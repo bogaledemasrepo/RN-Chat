@@ -37,3 +37,14 @@ export interface FriendsResponse{
         totalPages: number;
     };
 }
+
+export interface Friend{
+    avator: string;
+    bio: string;
+    birthDate: null;
+    email: string;
+    id: string;
+    name: string;
+    photos: string[];
+    userId: string;
+}
