@@ -1,163 +1,198 @@
-import { API_URL } from '@/constants';
-import { useAuth } from '@/context/auth-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'expo-checkbox';
+import { router } from 'expo-router';
+import { Formik } from 'formik';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Yup from 'yup';
+
+import { API_URL } from '@/constants';
+import { useAuth } from '@/context/auth-context';
+
+// Validation Schema for Registration
+const SignUpSchema = Yup.object().shape({
+  name: Yup.string()
+    .min(2, 'Name too short!')
+    .required('Name is required'),
+  email: Yup.string()
+    .email('Invalid email address')
+    .required('Email is required'),
+  password: Yup.string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required'),
+  acceptTerms: Yup.boolean()
+    .oneOf([true], 'You must accept the terms and conditions'),
+});
 
 const SignUp = () => {
-const [isChecked, setChecked] = useState(false);
-  const [isSeret,setIsSecret]=useState(true)
-  const [email,setEmail]=useState("")
-  const [name,setName]=useState("")
-  const [password,setPassword]=useState("")
-  const [error,setError]=useState({email:"",password:"",name:""})
-  const {handleSetUser,handleTost}=useAuth();
-  const handlerSubmit=()=>{
-        if(name=="") setError((prev)=>{
-      return {...prev,name:"Name is required!"}
-    /// VALIDATE
-  })
-    if(email=="") setError((prev)=>{
-      return {...prev,email:"Email is required!"}
-    /// VALIDATE
-  })
-        if(password.length < 6) setError((prev)=>{
-      return {...prev,password:password==""?"Passowrd is required!":"Passowrd must be longer!"}
-    /// VALIDATE
-   
-  })
-   if(!email && !password && !name) return;
+  const { handleSetUser, handleTost } = useAuth();
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-    fetch(`${API_URL}/auth/register`,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-      },
-      body:JSON.stringify({name,email,password})
-     }).then(res=>{
-    if(!res.ok) handleTost("Something went wrrong!","error",3000)
-      return res.json();
-  }).then(data=>{
-    console.log(data.token)
-    AsyncStorage.setItem("authToken",data.token||"")
-    handleSetUser({...data.user,token:data.token})
-  })
- 
-}
-  const handleEmailChange=(text: string)=>{
-    setError({email:"",password:"",name:""})
-    setEmail(text)
-  }
-    const handleNameChange=(text: string)=>{
-    setError({email:"",password:"",name:""})
-    setName(text)
-  }
-  const handlePasswordChange=(text: string)=>{
-    setError({email:"",password:"",name:""})
-    setPassword(text)
-  }
-  return (<SafeAreaView style={styles.container}>
-    <View style={{width:"100%"}}>
-    <View style={{width:"100%",display:"flex",justifyContent:"space-between",flexDirection:"row",alignItems:"center",marginBottom:16}}>
-      <MaterialCommunityIcons name='arrow-left' size={24} color={"#3183ff"} />
-      <Text style={{fontSize:24,fontWeight:900,color:"#3183ff"}}>Smart Chat App</Text>
-      <Text></Text>
-    </View>
-    <View style={{width:"100%",borderRadius:12,backgroundColor:"#fff",padding:16,paddingVertical:8}}>
-          <View style={{width:"100%",display:"flex",justifyContent:"center",flexDirection:"column",marginVertical:12}}>
-            <Text style={{fontSize:16,fontWeight:700,color:"#8a8a8a9a",textAlign:"center"}}>Create New Account</Text>
-          </View>
+  const handleRegister = async (values: any, { setSubmitting }: any) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          password: values.password
+        }),
+      });
 
-    <View style={{gap:16}}>
-      <View style={[{width:"100%",gap:2}]}>
-          <View style={[styles.border,{borderColor:error.email?"#ff6060c4":"#c7c7c7ff",height:48,width:"100%",backgroundColor:error.email?"#ff933b1a":"#f8f7f7ff",display:"flex",flexDirection:"row",alignItems:"center"}]}>
-            <MaterialCommunityIcons name='account' size={24} color={"#c7c7c7ff"} />
-            <TextInput onChangeText={handleNameChange} style={{flex:1}} placeholder='Name' />
-          </View>
-          {error.name &&
-           <View style={{display:"flex",marginHorizontal:16}}>
-            <Text style={{color:"#ff61619a",fontSize:12,textAlign:"center"}}>{error.name}</Text>
-          </View>}
-        </View>
-        <View style={[{width:"100%",gap:2}]}>
-          <View style={[styles.border,{borderColor:error.email?"#ff6060c4":"#c7c7c7ff",height:48,width:"100%",backgroundColor:error.email?"#ff933b1a":"#f8f7f7ff",display:"flex",flexDirection:"row",alignItems:"center"}]}>
-            <MaterialCommunityIcons name='email' size={24} color={"#c7c7c7ff"} />
-            <TextInput onChangeText={handleEmailChange} style={{flex:1}} placeholder='Email'/>
-          </View>
-          {error.email &&
-           <View style={{display:"flex",marginHorizontal:16}}>
-            <Text style={{color:"#ff61619a",fontSize:12,textAlign:"center"}}>{error.email}</Text>
-          </View>}
-        </View>
-        <View style={[{width:"100%",gap:6}]}>
-          <View style={[styles.border,{borderColor:error.password?"#ff6060c4":"#c7c7c7ff",height:48,width:"100%",backgroundColor:error.password?"#ff933b1a":"#f8f7f7ff",display:"flex",flexDirection:"row",alignItems:"center"}]}>
-            <MaterialCommunityIcons name='lock' size={24} color={"#c7c7c7ff"} />
-            <TextInput onChangeText={handlePasswordChange} secureTextEntry={!isSeret} placeholder='Password' style={{flex:1}}/>
-            <MaterialCommunityIcons onPress={()=>setIsSecret(!isSeret)} name={isSeret?'eye':'eye-off'} size={24} color={"#c7c7c7ff"} />
-          </View>{
-            error.password &&
-           <View style={{display:"flex",marginHorizontal:16}}>
-            <Text style={{color:"#ff61619a",fontSize:12,textAlign:"center"}}>{error.password}</Text>
-          </View>
-          }
-        </View>
-        <View style={[{width:"100%",display:"flex",flexDirection:"row",justifyContent:"space-between",alignItems:"center"}]}>
-        <View style={styles.section}>
-          <Checkbox style={styles.checkbox} value={isChecked} onValueChange={setChecked} />
-          <Text style={styles.paragraph}>Accept Terms and Policies.</Text>
-        </View>
-        </View>
-        </View>
-    <TouchableOpacity onPress={handlerSubmit} style={[styles.border,{height:48,width:"100%",backgroundColor:"#3183ff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-      <Text style={{color:"#fff"}}>{"Register"}</Text>
-    </TouchableOpacity>
-    <View style={{width:"100%",marginBottom:12}}>
-      <Text style={{textAlign:"center",color:"#8a8a8a9a"}}>Or Sign In With</Text>
-    </View>
-      <View style={{width:"100%",display:"flex",flexDirection:"row",justifyContent:"space-evenly"}}>
-          <TouchableOpacity style={[styles.border,{height:40,width:40,backgroundColor:"#d0e3ffff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-            <MaterialCommunityIcons name='facebook' size={16} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.border,{height:40,width:40,backgroundColor:"#d0e3ffff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-             <MaterialCommunityIcons name='google' size={16} />
-          </TouchableOpacity>
-            <TouchableOpacity style={[styles.border,{height:40,width:40,backgroundColor:"#d0e3ffff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-             <MaterialCommunityIcons name='apple' size={16} />
-          </TouchableOpacity>
-    </View>
-   </View>
-   </View>
-</SafeAreaView>
-  )
-}
+      const data = await response.json();
 
-export default SignUp
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed");
+      }
+
+      await AsyncStorage.setItem("authToken", data.token || "");
+      handleSetUser({ ...data.user, token: data.token });
+      router.replace("/root/home");
+      
+    } catch (err: any) {
+      handleTost(err.message, "error", 3000);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (<SafeAreaView style={{flex:1}}>
+    <ScrollView style={styles.container}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <MaterialCommunityIcons name='arrow-left' size={28} color="#3183ff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Smart Chat App</Text>
+        <View style={{ width: 28 }} /> 
+      </View>
+
+      <Formik
+        initialValues={{ name: '', email: '', password: '', acceptTerms: false }}
+        validationSchema={SignUpSchema}
+        onSubmit={handleRegister}
+      >
+        {({ handleChange, handleBlur, handleSubmit, setFieldValue, values, errors, touched, isSubmitting }) => (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Create New Account</Text>
+
+            <View style={styles.inputGap}>
+              {/* Name Field */}
+              <View>
+                <View style={[styles.inputWrapper, touched.name && errors.name && styles.inputError]}>
+                  <MaterialCommunityIcons name='account' size={22} color="#c7c7c7" />
+                  <TextInput 
+                    onChangeText={handleChange('name')}
+                    onBlur={handleBlur('name')}
+                    value={values.name}
+                    style={styles.textInput} 
+                    placeholder='Full Name'
+                  />
+                </View>
+                {touched.name && errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+              </View>
+
+              {/* Email Field */}
+              <View>
+                <View style={[styles.inputWrapper, touched.email && errors.email && styles.inputError]}>
+                  <MaterialCommunityIcons name='email' size={22} color="#c7c7c7" />
+                  <TextInput 
+                    onChangeText={handleChange('email')}
+                    onBlur={handleBlur('email')}
+                    value={values.email}
+                    style={styles.textInput} 
+                    placeholder='Email'
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+                {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+              </View>
+
+              {/* Password Field */}
+              <View>
+                <View style={[styles.inputWrapper, touched.password && errors.password && styles.inputError]}>
+                  <MaterialCommunityIcons name='lock' size={22} color="#c7c7c7" />
+                  <TextInput 
+                    onChangeText={handleChange('password')}
+                    onBlur={handleBlur('password')}
+                    value={values.password}
+                    secureTextEntry={!isPasswordVisible} 
+                    placeholder='Password' 
+                    style={styles.textInput}
+                  />
+                  <MaterialCommunityIcons 
+                    onPress={() => setIsPasswordVisible(!isPasswordVisible)} 
+                    name={isPasswordVisible ? 'eye-off' : 'eye'} 
+                    size={22} 
+                    color="#c7c7c7" 
+                  />
+                </View>
+                {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+              </View>
+
+              {/* Terms Checkbox */}
+              <View>
+                <View style={styles.rowCenter}>
+                  <Checkbox 
+                    style={styles.checkbox} 
+                    value={values.acceptTerms} 
+                    onValueChange={(val) => setFieldValue('acceptTerms', val)} 
+                    color={values.acceptTerms ? '#3183ff' : undefined} 
+                  />
+                  <Text style={styles.mutedText}>Accept Terms and Policies.</Text>
+                </View>
+                {touched.acceptTerms && errors.acceptTerms && <Text style={styles.errorText}>{errors.acceptTerms}</Text>}
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              onPress={() => handleSubmit()} 
+              disabled={isSubmitting}
+              style={[styles.buttonPrimary, isSubmitting && { opacity: 0.7 }]}
+            >
+              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Register</Text>}
+            </TouchableOpacity>
+
+            <Text style={styles.orText}>Or Sign In With</Text>
+
+            <View style={styles.socialRow}>
+              {['facebook', 'google', 'apple'].map((icon) => (
+                <TouchableOpacity key={icon} style={styles.socialBtn}>
+                  <MaterialCommunityIcons name={icon as any} size={20} color="#3183ff" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+      </Formik>
+      <View style={{height:40}}></View>
+    </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+export default SignUp;
 
 const styles = StyleSheet.create({
-  container:{
-    backgroundColor:"#e9ecf4",
-    flex:1,
-    padding:12
-  },
-  border:{
-    borderWidth:1,
-    color:"#eeeeee9a",
-    borderColor:"#c7c7c7ff",
-    borderRadius:8,
-    paddingHorizontal:12
-  },
-    section: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  paragraph: {
-    fontSize: 14,
-    color:"#8a8a8a9a"
-  },
-  checkbox: {
-    margin: 8,
-  },
-})
+  container: { flex: 1, backgroundColor: "#e9ecf4", padding: 16 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  headerTitle: { fontSize: 22, fontWeight: "900", color: "#3183ff" },
+  card: { width: "100%", borderRadius: 16, backgroundColor: "#fff", padding: 20, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8 },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: "#8a8a8a", textAlign: "center", marginBottom: 20 },
+  inputGap: { gap: 14, marginBottom: 20 },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: "#f8f7f7", borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, height: 50, paddingHorizontal: 12 },
+  inputError: { borderColor: "#ff6060", backgroundColor: "#fff5f5" },
+  textInput: { flex: 1, marginLeft: 10, fontSize: 15 },
+  errorText: { color: "#ff6060", fontSize: 11, marginTop: 4, marginLeft: 4 },
+  rowCenter: { flexDirection: 'row', alignItems: 'center' },
+  mutedText: { fontSize: 14, color: "#8a8a8a" },
+  checkbox: { marginRight: 8, width: 18, height: 18 },
+  buttonPrimary: { height: 50, backgroundColor: "#3183ff", borderRadius: 10, justifyContent: "center", alignItems: "center", marginTop: 10, marginBottom: 20 },
+  buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  orText: { textAlign: "center", color: "#8a8a8a", marginBottom: 16 },
+  socialRow: { flexDirection: "row", justifyContent: "center", gap: 20 },
+  socialBtn: { height: 44, width: 44, borderRadius: 22, backgroundColor: "#f0f6ff", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#d0e3ff" },
+});
