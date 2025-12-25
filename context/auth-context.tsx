@@ -1,86 +1,124 @@
 import { User } from "@/types";
-import { createContext, ReactNode, useContext, useState } from "react";
-import { Text } from 'react-native';
-import Animated, { useSharedValue, withSpring } from 'react-native-reanimated';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Added for icons
+import React, { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
-// Define the type for the full context object
+type ToastType = 'success' | 'error' | 'info';
+
 interface AuthContextType {
-    user: User|null;
-    handleSetUser: (data:User|null) => void
-    handleTost:(title: string, type: string, duration: number)=>void;
+  user: User | null;
+  handleSetUser: (data: User | null) => void;
+  handleTost: (title: string, type: ToastType, duration?: number) => void;
 }
 
-// The 'as AuthContextType' assertion ensures TypeScript knows the final type
-export const AuthContext = createContext<AuthContextType>({
-    user: null,
-    handleSetUser: (data:User|null) => {},
-    handleTost:(title: string, type: string, duration: number)=>{}
-});
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthProvider=({children}:{children:ReactNode})=>{
-const [user,setUser]=useState<User | null>(null);
-const top = useSharedValue(-100);
-const [tostTitle,setTostTitle]=useState("")
-const [tostType,setTostType]=useState("")
-const [profileUpdated,setProfileUpdated]=useState(false);
+const { width } = Dimensions.get('window');
 
-  const handleTost = (title:string,type:string,duration:number) => {
-    setTostTitle(title)
-    setTostType(type)
-    top.value = withSpring(100);
-    setTimeout(()=>{
-      top.value = withSpring(-100);
-    },duration)
+// Helper to get icon name based on type
+const getToastIcon = (type: ToastType): keyof typeof MaterialCommunityIcons.glyphMap => {
+  switch (type) {
+    case 'success': return 'check-circle';
+    case 'error': return 'alert-circle';
+    case 'info': return 'information';
+    default: return 'bell';
+  }
+};
+
+const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [toast, setToast] = useState<{ title: string; type: ToastType }>({
+    title: "",
+    type: "info",
+  });
+
+  const translateY = useSharedValue(-150);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const handleTost = (title: string, type: ToastType, duration: number = 3000) => {
+    setToast({ title, type });
+    translateY.value = withSpring(60, { damping: 15, stiffness: 100 });
+
+    setTimeout(() => {
+      translateY.value = withSpring(-150);
+    }, duration);
   };
 
-// useEffect(()=>{
-//    const unsub =  onAuthStateChanged(auth,(user)=>{
-//     if(!user) {
-//         setUser(null);
-//     }
-//     else{
-//       const q = query(collection(db,"users"), where("id", "==", user.uid), limit(1)); 
-//        getDocs(q).then(snapshot=>{
-//         if(!snapshot.empty) {
-//          const {id,name,email,avator} = snapshot.docs[0].data()
-//          setUser({id,name,email,avator})
-//          setProfileUpdated(false)
-//         }
-//        });
-//     }
-//    })
-//    setUser({"email": "jk@gmail.com", "id": "9J6CXRw5ylhGdeOnIypctjrdqt13", "name": "Jacob","avator":""});
-// return unsub;
-// },[profileUpdated])
-const handleSetUser=(data:User|null)=>{
-    setUser(data);
-}
-return <AuthContext.Provider value={{user,handleSetUser,handleTost}}>
-    <Animated.View
-            style={{
-              position:"absolute",
-              borderWidth:1,
-              borderColor:tostType == "success"?"#27c43bff": tostType == 'error'?"#ff7e7ee1":"#59aff5ff",
-              borderRadius:4,
-              top,
-              left:"2%",
-              width:"96%",
-              marginHorizontal:"auto",
-              height: 80,
-              backgroundColor: '#fff',
-              zIndex:999,
-              display:"flex",
-              alignItems:"center",
-              justifyContent:"center"
-            }}
-          >
-            <Text style={{textAlign:"center",color:tostType=="success"?"#27c43bff":tostType=='error'?"#f85c5cff":"#59aff5ff",fontWeight:"bold",marginVertical:16,fontSize:16}}>{tostTitle}</Text>
-          </Animated.View>
-        {children}
-    </AuthContext.Provider>
-}
+  const handleSetUser = (data: User | null) => setUser(data);
 
- export const useAuth=()=>useContext(AuthContext);
+  const value = useMemo(() => ({ user, handleSetUser, handleTost }), [user]);
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+
+      {/* Toast UI */}
+      <Animated.View style={[styles.toastContainer, animatedStyle, styles[toast.type]]}>
+        <View style={styles.toastContent}>
+          <MaterialCommunityIcons 
+            name={getToastIcon(toast.type)} 
+            size={28} 
+            style={styles[`text_${toast.type}`]} 
+          />
+          <View style={styles.textWrapper}>
+            <Text style={[styles.toastText, styles[`text_${toast.type}`]]}>
+              {toast.title}
+            </Text>
+          </View>
+        </View>
+      </Animated.View>
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+};
 
 export default AuthProvider;
 
+const styles = StyleSheet.create({
+  toastContainer: {
+    position: "absolute",
+    top: 0,
+    left: width * 0.05,
+    width: width * 0.9,
+    minHeight: 60,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    zIndex: 9999,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1.5,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+  },
+  toastContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  textWrapper: {
+    flex: 1, // Ensures text wraps if it is too long
+  },
+  toastText: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  // Color Themes
+  success: { borderColor: "#27c43b", backgroundColor: "#f6fff7" },
+  error: { borderColor: "#f85c5c", backgroundColor: "#fff6f6" },
+  info: { borderColor: "#3183ff", backgroundColor: "#f6faff" },
+  text_success: { color: "#1b8a29" },
+  text_error: { color: "#d32f2f" },
+  text_info: { color: "#1976d2" },
+});

@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import HorizontalGrid from "@/components/BeautifullScroller";
 import { API_URL } from "@/constants";
@@ -17,7 +25,8 @@ const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 
 const UserDetail = () => {
   const [friend, setFriend] = useState<Friend>();
-  const { user } = useAuth();
+  const [isLoadingRequest, setIsLoadingRequest] = useState(false);
+  const { user, handleTost } = useAuth();
   const { slug } = useLocalSearchParams();
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -51,65 +60,118 @@ const UserDetail = () => {
   useEffect(() => {
     fetchFriend();
   }, [fetchFriend]);
+  const sendFriendRequest = async () => {
+    setIsLoadingRequest(true);
+    try {
+      const response = await fetch(`${API_URL}/requests`, {
+        method: "POST",
+        headers: { Authorization: "Bearer " + user?.token },
+        body: JSON.stringify({ reciverId: slug }),
+      });
+      console.log(await response.json());
+      if (response.ok) {
+        handleTost("Friend Request sent!", "success", 3000);
+        setIsLoadingRequest(false);
+      } else {
+        handleTost("Feild to send request!", "error", 3000);
+        setIsLoadingRequest(false);
+      }
+    } catch (error) {
+      handleTost("Feild to send request!", "error", 3000);
+      setIsLoadingRequest(false);
+      console.error("Fetch Error:", error);
+    }
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <StatusBar style="auto" />
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
+        <StatusBar style="auto" />
 
-      {/* ANIMATED HEADER */}
-      <Animated.View style={[styles.header, { height: headerHeight }]}>
-        <Animated.Image
-          source={{ uri: friend?.avator }}
-          style={[
-            styles.headerImage,
-            {
-              width: headerHeight,
-              height: headerHeight,
-              borderRadius: borderRadius,
-            },
-          ]}
-          resizeMode="cover"
-        />
-      </Animated.View>
+        {/* ANIMATED HEADER */}
+        <Animated.View style={[styles.header, { height: headerHeight }]}>
+          <Animated.Image
+            source={{ uri: friend?.avator }}
+            style={[
+              styles.headerImage,
+              {
+                width: headerHeight,
+                height: headerHeight,
+                borderRadius: borderRadius,
+              },
+            ]}
+            resizeMode="cover"
+          />
+        </Animated.View>
 
-      <Animated.ScrollView
-        showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        contentContainerStyle={{ paddingTop: HEADER_MAX_HEIGHT }}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-      >
-        <View style={styles.mainContent}>
-          {/* Action Row */}
-          <View style={styles.actionRow}>
-            <ActionButton icon="phone-call" color="#e98181" highlighted />
-            <ActionButton icon="message-square" color="#666" />
-            <ActionButton icon="video" color="#666" />
-            <ActionButton icon="mail" color="#666" />
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          contentContainerStyle={{ paddingTop: HEADER_MAX_HEIGHT }}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+        >
+          <View style={styles.mainContent}>
+            <View style={styles.actionRow}>
+              {/* {friend?.avator ? (
+                <>
+                  <ActionButton icon="phone-call" color="#666" />
+                  <ActionButton icon="message-square" color="#666" />
+                  <ActionButton icon="video" color="#666" />
+                </>
+              ) : ( */}
+              <>
+                <TouchableOpacity
+                  onPress={sendFriendRequest}
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    flexDirection: "row",
+                    padding: 12,
+                    borderWidth: 1,
+                    borderColor: "#eee",
+                    backgroundColor: "#fff",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  
+                  {isLoadingRequest ? (
+                    <ActivityIndicator size={24} color={"#333"} />
+                  ) : (
+                    <Feather name={"plus"} size={24} color={"#273885ff"} />
+                    
+                  )}<Text>Add Friend</Text>
+                </TouchableOpacity>
+              </>
+              {/* )} */}
+            </View>
+
+            {/* User Info Card */}
+            <View style={styles.card}>
+              <Text style={styles.title}>{friend?.name || "Loading..."}</Text>
+              <Text style={styles.bio}>
+                {friend?.bio || "No bio available."}
+              </Text>
+
+              <View style={styles.divider} />
+
+              <InfoRow icon="mail" text={friend?.email || user?.email} />
+              <InfoRow
+                icon="calendar"
+                text={friend?.birthDate || "Jan 01, 1990"}
+              />
+            </View>
+
+            {/* Horizontal Gallery */}
+            <HorizontalGrid data={friend?.photos || []} />
+
+            <View style={{ height: 50 }} />
           </View>
-
-          {/* User Info Card */}
-          <View style={styles.card}>
-            <Text style={styles.title}>{friend?.name || "Loading..."}</Text>
-            <Text style={styles.bio}>{friend?.bio || "No bio available."}</Text>
-
-            <View style={styles.divider} />
-
-            <InfoRow icon="mail" text={friend?.email || user?.email} />
-            <InfoRow
-              icon="calendar"
-              text={friend?.birthDate || "Jan 01, 1990"}
-            />
-          </View>
-
-          {/* Horizontal Gallery */}
-          <HorizontalGrid />
-
-          <View style={{ height: 50 }} />
-        </View>
-      </Animated.ScrollView>
+        </Animated.ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -152,15 +214,16 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
+    justifyContent: "flex-start",
+    gap: 8,
+    marginBottom: 4,
   },
   actionBtn: {
     width: "22%",
-    height: 60,
+    height: 48,
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: "#ddddddff",
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
