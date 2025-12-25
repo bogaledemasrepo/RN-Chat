@@ -6,7 +6,7 @@ import { API_URL } from "@/constants";
 import { useAuth } from "@/context/auth-context";
 import { Friend } from "@/types";
 import { Feather } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -82,6 +82,16 @@ const Profile = () => {
         )}
       >
         <View style={styles.mainContent}>
+          {/* Action Row */}
+          <View style={styles.actionRow}>
+            <Link href={"/root/profile/sethings"}>
+                <ActionButton icon="settings" label="Sething" color="#666" />
+            </Link>
+            <ActionButton icon="message-square" color="#666" />
+            <ActionButton icon="video" color="#666" />
+            
+            <ActionButton icon="edit" color="#666" />
+          </View>
 
           {/* User Info Card */}
           <View style={styles.card}>
@@ -103,9 +113,9 @@ const Profile = () => {
     </SafeAreaView>
   );
 };
-const ActionButton = ({ icon, color, highlighted }: any) => (
-  <View style={[styles.actionBtn, highlighted && styles.actionBtnActive]}>
-    <Feather name={icon} size={24} color={highlighted ? color : "#333"} />
+const ActionButton = ({ icon, label }: any) => (
+  <View style={styles.actionBtn}>
+    <Feather name={icon} size={24} color={  "#333"} />
   </View>
 );
 

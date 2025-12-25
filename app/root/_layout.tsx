@@ -15,6 +15,6 @@ export default function TabsLayout() {
   },headerShown:false}}>
     <Tabs.Screen name="home" options={{title:"Home",tabBarLabel:"Home",tabBarIcon:({color,focused,size})=><MaterialCommunityIcons name="home" color={color} size={size}/>}} />
     <Tabs.Screen name="friends" options={{title:"Friends",tabBarLabel:"Friends",tabBarIcon:({color,focused,size})=><MaterialCommunityIcons name="account-group" color={color} size={size}/>}} />
-    <Tabs.Screen name="profile/index" options={{title:"Profile",tabBarLabel:"Profile",tabBarIcon:({color,focused,size})=><MaterialCommunityIcons name="account" color={color} size={size}/>}}/>
+    <Tabs.Screen name="profile" options={{title:"Profile",tabBarLabel:"Profile",tabBarIcon:({color,focused,size})=><MaterialCommunityIcons name="account" color={color} size={size}/>}}/>
   </Tabs>;
 }
