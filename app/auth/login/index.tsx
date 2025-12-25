@@ -1,155 +1,177 @@
-import { API_URL } from '@/constants';
-import { useAuth } from '@/context/auth-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from 'expo-checkbox';
 import { Link, router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Formik } from 'formik';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Yup from 'yup';
+
+import { API_URL } from '@/constants';
+import { useAuth } from '@/context/auth-context';
+
+// Validation Schema
+const LoginSchema = Yup.object().shape({
+  email: Yup.string()
+    .email('Invalid email address')
+    .required('Email is required'),
+  password: Yup.string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required'),
+});
 
 const SignIn = () => {
-  const [isChecked, setChecked] = useState(false);
-  const [isSeret,setIsSecret]=useState(true)
-  const [email,setEmail]=useState("")
-  const {user,handleTost,handleSetUser}=useAuth();
+  const { user, handleTost, handleSetUser } = useAuth();
+  const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
 
-  const [password,setPassword]=useState("")
-  const [error,setError]=useState({email:"",password:""})
-  const handlerSubmit=async ()=>{
-    if(email=="") setError((prev)=>{
-      return {...prev,email:"Email is required!"}
-    /// VALIDATE
-  })
-      if(password.length < 6) setError((prev)=>{
-      return {...prev,password:password==""?"Passowrd is required!":"Passowrd must be longer!"}
-    /// VALIDATE
-   
-  })
-   if(!email && !password) return;
-  fetch(`${API_URL}/auth/login`,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({email,password})
-  }).then(res=>{
-    if(!res.ok) handleTost("Something went wrrong!","error",3000)
-      return res.json();
-  }).then(data=>{
-    console.log(data.token)
-    AsyncStorage.setItem("authToken",data.token||"")
-    handleSetUser({...data.user,token:data.token})
-  })
- 
-   
-}
-  const handleEmailChange=(text: string)=>{
-    setError({email:"",password:""})
-    setEmail(text)
-  }
-  const handlePasswordChange=(text: string)=>{
-    setError({email:"",password:""})
-    setPassword(text)
-  }
-  useEffect(()=>{
-    if(user) router.navigate("/root/home")
-  },[user])
-  return (<SafeAreaView style={styles.container}>
-    <View style={{width:"100%"}}>
-    {/* <View style={{width:"100%",display:"flex",justifyContent:"center",flexDirection:"row"}}>
-      <Text style={{fontSize:24,fontWeight:900,marginVertical:20,color:"#3183ff"}}>Smart Eccomerce</Text>
-    </View> */}
-    <View style={{width:"100%",borderRadius:12,backgroundColor:"#fff",padding:16}}>
-      <View style={{width:"100%",display:"flex",justifyContent:"center",flexDirection:"column",marginVertical:16}}>
-        <Text style={{fontSize:16,fontWeight:700,color:"#8a8a8a9a",textAlign:"center"}}>Wellcome to</Text>
-        <Text style={{fontSize:16,fontWeight:700,color:"#8a8a8a9a",textAlign:"center"}}> Smart Chat App Login now</Text>
-      </View>
-      <View style={{gap:16}}>
-    <View style={[{width:"100%",gap:2}]}>
-      <View style={[styles.border,{borderColor:error.email?"#ff6060c4":"#c7c7c7ff",height:48,width:"100%",backgroundColor:error.email?"#ff933b1a":"#f8f7f7ff",display:"flex",flexDirection:"row",alignItems:"center"}]}>
-        <MaterialCommunityIcons name='email' size={24} color={"#c7c7c7ff"} />
-        <TextInput onChangeText={handleEmailChange} style={{flex:1}} placeholder='Email'/>
-      </View>
-      {error.email &&
-       <View style={{display:"flex",marginHorizontal:16}}>
-        <Text style={{color:"#ff61619a",fontSize:12,textAlign:"center"}}>{error.email}</Text>
-      </View>}
-    </View>
-    <View style={[{width:"100%",gap:6}]}>
-      <View style={[styles.border,{borderColor:error.password?"#ff6060c4":"#c7c7c7ff",height:48,width:"100%",backgroundColor:error.password?"#ff933b1a":"#f8f7f7ff",display:"flex",flexDirection:"row",alignItems:"center"}]}>
-        <MaterialCommunityIcons name='lock' size={24} color={"#c7c7c7ff"} />
-        <TextInput onChangeText={handlePasswordChange} secureTextEntry={!isSeret} placeholder='Password' style={{flex:1}}/>
-        <MaterialCommunityIcons onPress={()=>setIsSecret(!isSeret)} name={isSeret?'eye':'eye-off'} size={24} color={"#c7c7c7ff"} />
-      </View>{
-        error.password &&
-       <View style={{display:"flex",marginHorizontal:16}}>
-        <Text style={{color:"#ff61619a",fontSize:12,textAlign:"center"}}>{error.password}</Text>
-      </View>
+  useEffect(() => {
+    if (user) router.replace("/root/home");
+  }, [user]);
+
+  const handleLogin = async (values: any, { setSubmitting }: any) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
       }
-    </View>
-    <View style={[{width:"100%",display:"flex",flexDirection:"row",justifyContent:"space-between",alignItems:"center"}]}>
-    <View style={styles.section}>
-      <Checkbox style={styles.checkbox} value={isChecked} onValueChange={setChecked} />
-      <Text style={styles.paragraph}>Remember me</Text>
-    </View>
-    <Text style={styles.paragraph}>Forgot password?</Text>
-    </View>
-    </View>
-    <TouchableOpacity onPress={handlerSubmit} style={[styles.border,{borderColor:"#d8d8d8ff",height:48,width:"100%",backgroundColor:"#3183ff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-      <Text style={{color:"#fff"}}>{"Login"}</Text>
-    </TouchableOpacity>
-      <View style={{width:"100%",marginVertical:12}}>
-        <Link href={"/auth/register"} asChild>
-      <Text style={{textAlign:"center",color:"#8a8a8a9a"}}>I have not any account Register ?</Text>
-      </Link>
-    </View>
-    <View style={{width:"100%",marginBottom:12}}>
-      <Text style={{textAlign:"center",color:"#8a8a8a9a"}}>Or Sign In With</Text>
-    </View>
-      <View style={{width:"100%",display:"flex",flexDirection:"row",justifyContent:"space-evenly"}}>
-          <TouchableOpacity style={[styles.border,{borderColor:"#d8d8d8ff",height:40,width:40,backgroundColor:"#d0e3ffff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-            <MaterialCommunityIcons name='facebook' size={16} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.border,{borderColor:"#d8d8d8ff",height:40,width:40,backgroundColor:"#d0e3ffff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-              <MaterialCommunityIcons name='google' size={16} />
-          </TouchableOpacity>
-            <TouchableOpacity style={[styles.border,{borderColor:"#d8d8d8ff",height:40,width:40,backgroundColor:"#d0e3ffff",display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center"}]}>
-              <MaterialCommunityIcons name='apple' size={16} />
-          </TouchableOpacity>
-        </View>
-   </View>
-   </View>
-</SafeAreaView>
-  )
-}
 
-export default SignIn
+      await AsyncStorage.setItem("authToken", data.token || "");
+      handleSetUser({ ...data.user, token: data.token });
+      
+    } catch (err: any) {
+      handleTost(err.message, "error", 3000);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Formik
+        initialValues={{ email: '', password: '', rememberMe: false }}
+        validationSchema={LoginSchema}
+        onSubmit={handleLogin}
+      >
+        {({ handleChange, handleBlur, handleSubmit, setFieldValue, values, errors, touched, isSubmitting }) => (
+          <View style={styles.card}>
+            <View style={styles.header}>
+              <Text style={styles.subTitle}>Welcome to</Text>
+              <Text style={styles.subTitle}>Smart Chat App Login now</Text>
+            </View>
+
+            <View style={styles.inputGap}>
+              {/* Email Field */}
+              <View>
+                <View style={[styles.inputWrapper, touched.email && errors.email && styles.inputError]}>
+                  <MaterialCommunityIcons name='email' size={22} color="#c7c7c7" />
+                  <TextInput 
+                    onChangeText={handleChange('email')}
+                    onBlur={handleBlur('email')}
+                    value={values.email}
+                    style={styles.textInput} 
+                    placeholder='Email'
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+                {touched.email && errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+              </View>
+
+              {/* Password Field */}
+              <View>
+                <View style={[styles.inputWrapper, touched.password && errors.password && styles.inputError]}>
+                  <MaterialCommunityIcons name='lock' size={22} color="#c7c7c7" />
+                  <TextInput 
+                    onChangeText={handleChange('password')}
+                    onBlur={handleBlur('password')}
+                    value={values.password}
+                    secureTextEntry={!isPasswordVisible} 
+                    placeholder='Password' 
+                    style={styles.textInput}
+                  />
+                  <MaterialCommunityIcons 
+                    onPress={() => setIsPasswordVisible(!isPasswordVisible)} 
+                    name={isPasswordVisible ? 'eye-off' : 'eye'} 
+                    size={22} 
+                    color="#c7c7c7" 
+                  />
+                </View>
+                {touched.password && errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+              </View>
+
+              {/* Remember Me & Forgot Password */}
+              <View style={styles.rowBetween}>
+                <View style={styles.rowCenter}>
+                  <Checkbox 
+                    style={styles.checkbox} 
+                    value={values.rememberMe} 
+                    onValueChange={(val) => setFieldValue('rememberMe', val)} 
+                    color={values.rememberMe ? '#3183ff' : undefined} 
+                  />
+                  <Text style={styles.mutedText}>Remember me</Text>
+                </View>
+                <TouchableOpacity><Text style={styles.mutedText}>Forgot password?</Text></TouchableOpacity>
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              onPress={() => handleSubmit()} 
+              disabled={isSubmitting}
+              style={[styles.buttonPrimary, isSubmitting && { opacity: 0.7 }]}
+            >
+              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
+            </TouchableOpacity>
+
+            <Link href="/auth/register" asChild>
+              <TouchableOpacity style={styles.marginVertical12}>
+                <Text style={styles.centerMutedText}>I don&apos;t have an account. Register?</Text>
+              </TouchableOpacity>
+            </Link>
+
+            <Text style={[styles.centerMutedText, { marginBottom: 12 }]}>Or Sign In With</Text>
+
+            <View style={styles.socialRow}>
+              {['facebook', 'google', 'apple'].map((icon) => (
+                <TouchableOpacity key={icon} style={styles.socialBtn}>
+                  <MaterialCommunityIcons name={icon as any} size={20} color="#3183ff" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+      </Formik>
+    </SafeAreaView>
+  );
+};
+
+export default SignIn;
 
 const styles = StyleSheet.create({
-  container:{
-    backgroundColor:"#e9ecf4",
-    flex:1,
-    padding:12,
-    display:"flex",
-    alignItems:"center",
-    justifyContent:"center"
-  },
-  border:{
-    borderWidth:1,
-    color:"#eeeeee9a",
-    borderRadius:8,
-    paddingHorizontal:12
-  },
-    section: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  paragraph: {
-    fontSize: 14,
-    color:"#8a8a8a9a"
-  },
-  checkbox: {
-    margin: 8,
-  },
-})
+  container: { flex: 1, backgroundColor: "#e9ecf4", padding: 16, justifyContent: "center" },
+  card: { width: "100%", borderRadius: 16, backgroundColor: "#fff", padding: 20, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8 },
+  header: { alignItems: 'center', marginBottom: 24 },
+  subTitle: { fontSize: 16, fontWeight: '600', color: "#8a8a8a" },
+  inputGap: { gap: 16, marginBottom: 20 },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: "#f8f7f7", borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, height: 52, paddingHorizontal: 12 },
+  inputError: { borderColor: "#ff6060", backgroundColor: "#fff5f5" },
+  textInput: { flex: 1, marginLeft: 10, fontSize: 15 },
+  errorText: { color: "#ff6060", fontSize: 11, marginTop: 4, marginLeft: 4 },
+  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  rowCenter: { flexDirection: 'row', alignItems: 'center' },
+  mutedText: { fontSize: 14, color: "#8a8a8a" },
+  centerMutedText: { textAlign: "center", color: "#8a8a8a" },
+  checkbox: { marginRight: 8, width: 18, height: 18 },
+  buttonPrimary: { height: 52, backgroundColor: "#3183ff", borderRadius: 10, justifyContent: "center", alignItems: "center", marginTop: 10 },
+  buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  socialRow: { flexDirection: "row", justifyContent: "center", gap: 20 },
+  socialBtn: { height: 48, width: 48, borderRadius: 24, backgroundColor: "#f0f6ff", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#d0e3ff" },
+  marginVertical12: { marginVertical: 12 }
+});
