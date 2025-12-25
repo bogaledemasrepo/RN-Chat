@@ -1,57 +1,42 @@
-import Button from '@/components/button';
-import { API_URL } from '@/constants';
-import { useAuth } from '@/context/auth-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { router } from 'expo-router'
+import { StatusBar } from 'expo-status-bar'
+import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Index = () => {
-  const {handleSetUser}=useAuth();
-  useEffect(()=>{
-    async function getUser() {
-      const token =await AsyncStorage.getItem("authToken");
-      if(token){
-        fetch(`${API_URL}/profile/me`,{
-          headers:{
-          "Content-Type":"application/json",
-          "Authorization":`Bearer ${token}`
-          }
-        
-        }).then(res=>{
-              if(!res.ok) throw new Error("Faild to auto login!");
-              return res.json(); 
-          }).then(data=>{
-            console.log(data)
-            handleSetUser({...data,token:token})
-          }).catch(err=>console.log(err))
-      }
-      }
-   getUser()
-  },[]) 
-  return (<SafeAreaView style={styles.container}>
-    <View>
-      <Text>index</Text>
-    </View>
-    <Button onPress={() => router.navigate("/auth/login")} label={'Get started'} theme='primary'/>
-    <StatusBar style='auto' />
-  </SafeAreaView>)
+  setTimeout(()=>{
+    router.navigate("/auth/login")
+  },3000)
+  return (<SafeAreaView style={styles.continer}>
+          <View style={styles.hero}>
+            <MaterialCommunityIcons name='chat' size={96} color={"#fff"} />
+            <Text style={styles.label}>Wellcome to RN-Chat</Text>
+          </View>
+        <StatusBar style='auto'/>
+    </SafeAreaView>
+  )
 }
-
 const styles = StyleSheet.create({
-  container:{
-    flex:1 ,
+  continer:{
+    flex:1,
+    backgroundColor:"#2252acff",
     display:"flex",
-    backgroundColor:"#0b1133ff",
-    padding:16,
     alignItems:"center",
-    justifyContent:"center",
-    
+    justifyContent:"center"
+  },
+  hero:{
+    width:"100%",
+    display:"flex",
+    flexDirection:"column",
+    alignItems:"center",
+    justifyContent:"center"
+  },
+  label:{
+    fontSize:24,
+    fontWeight:"bold",
+    color:"#fff"
   }
 })
-
 export default Index
-
-
